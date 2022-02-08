@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Poller+One&display=swap');
+
+.theme-dark {
+  --dark-text: #292929;
+  --light-text: #f9f8f8;
+  --dark-background: #2f4550;
+  --light-background: #586f7c;
+  --accent: #b8dbd9;
+  --button-border: #b8dbd9;
+}
+
+.theme-light {
+  --dark-text: #5e4b56;
+  --light-text: #5e4b56;
+  --dark-background: #dbe7e4;
+  --light-background: #eddcd2;
+  --accent: #dbe7e4;
+  --button-border: #5e4b56;
+}
+
+#root {
+  background-color: var(--dark-background) !important;
+  color: var(--dark-text);
+  margin: 0;
+}
+
+.main {
+  min-height: 90vh;
+  display: flex;
+  padding: 0 2rem;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.footer {
+  display: flex;
+  padding: 2rem 0;
+  flex-direction: column;
+  border-top: 1px solid #eaeaea;
+  justify-content: center;
+  align-items: center;
+}
+
+.image {
+  width: 500px;
+  height: 500px;
+}
+
+.header {
+  font-size: 2rem;
+  margin: 2rem 0;
+  font-family: 'Poller One', cursive;
+}
+
+.description {
+  line-height: 1;
+  margin: 2rem 0;
+  font-size: 1.2rem;
+  color: var(--light-text);
+}
+
+.button {
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 15px;
+  padding: 20px;
+  width: 200px;
+  cursor: pointer;
+  margin-bottom: 2%;
+  background-size: 300% auto;
+  transition: 0.5s;
+  font-family: 'Poller One', cursive;
+}
+.button:hover {
+  box-shadow: 0 0 0.5px 0.5px var(--button-border);
+  background-position: right center;
+  color: #fff;
+  text-decoration: none;
+}
+.button:active {
+  transform: translateY(5px);
+}
+
+.header,
+.button,
+.linkText,
+.footerText,
+.mintedTokenIds,
+.progressBar,
+.showCounter .countdown {
+  background-image: linear-gradient(
+    to right,
+    #d38312 0%,
+    #a83279 51%,
+    #d38312 90%
+  );
+}
+.showCounter .countdown.danger {
+  animation: 3s ease 0s infinite normal none running blinker;
+  background-image: linear-gradient(
+    to right,
+    #d38c12 0%,
+    #a83232 50%,
+    #d38c12 95%
+  );
+}
+.header,
+.linkText,
+.footerText,
+.mintedTokenIds,
+.showCounter .countdown {
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.linkText {
+  font-weight: 700;
+}
+
+.showCounter {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  line-height: 1.75rem;
+  padding: 2rem 0;
+  text-decoration: none;
+}
+
+.showCounter .countdown {
+  line-height: 1.25rem;
+  padding: 0 0.75rem 0 0.75rem;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Poller One', cursive;
+}
+
+.showCounter .countdown > p {
+  margin: 0;
+}
+
+.showCounter .countdown > span {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.twitterLogo {
+  width: 25px;
+  height: 25px;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 10%;
+  }
+}
+
+@media (max-width: 1000px) {
+  .main {
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .image {
+    width: 300px;
+    height: 300px;
+    padding-left: 0;
+  }
+}
+@media (max-width: 500px) {
+  .main {
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .image {
+    width: 200px;
+    height: 200px;
+    padding-left: 0;
+    padding-top: 2rem;
+  }
+}
