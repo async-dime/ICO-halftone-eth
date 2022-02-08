@@ -178,6 +178,7 @@ export default function Home() {
       BarOfProgress.start(15000);
       setLoading(true);
       await tx.wait();
+      BarOfProgress.finish();
       setLoading(false);
       showToast('success', 'Successfully minted Halftone Ethereum Tokens!');
       await getBalanceOfHalftoneEthTokens();
@@ -374,10 +375,10 @@ export default function Home() {
               <span className={styles.claimableTokens}>
                 <b>{tokensToBeClaimed * 10}</b>
               </span>{' '}
-              Tokens can be claimed!
+              HETs can be claimed!
             </div>
             <button className={styles.button} onClick={claimHalftoneEthTokens}>
-              Claim Tokens 🪙
+              Claim HET 🪙
             </button>
           </div>
         );
@@ -388,7 +389,7 @@ export default function Home() {
           <div>
             <input
               type="number"
-              placeholder="Amount of Tokens"
+              placeholder="Amount of HET"
               // BigNumber.from converts the `e.target.value` to a BigNumber
               onChange={(e) => setTokenAmount(BigNumber.from(e.target.value))}
               className={styles.input}
@@ -400,7 +401,7 @@ export default function Home() {
             disabled={!(tokenAmount > 0)}
             onClick={() => mintHalftoneEthToken(tokenAmount)}
           >
-            Mint Tokens 🪙
+            Mint HET 🪙
           </button>
         </div>
       );
@@ -423,9 +424,9 @@ export default function Home() {
       <div className={styles.main}>
         <Toast toastList={list} />
         <div>
-          <h1 className={styles.header}>Halftone Ethereum ICO</h1>
+          <h1 className={styles.header}>Halftone-Ethereum ICO</h1>
           <div className={styles.description}>
-            This is a page for claiming or minting Halftone Ethereum tokens.
+            This is a page for claiming or minting Halftone-Ethereum (HET) token.
           </div>
           {walletConnected ? (
             <div>
@@ -435,7 +436,7 @@ export default function Home() {
                 <span className={styles.mintedTokens}>
                   <b>{utils.formatEther(balanceOfHalftoneEthTokens)}</b>
                 </span>{' '}
-                Halftone Ethereum Tokens
+                Halftone-Ethereum tokens
               </div>
               <div className={styles.description}>
                 {/* Format Ether helps us in converting a BigNumber to string */}
@@ -443,7 +444,7 @@ export default function Home() {
                 <span className={styles.mintedTokens}>
                   <b>{utils.formatEther(tokensMinted)}/10000</b>
                 </span>{' '}
-                have been minted!
+                HETs have been minted!
               </div>
               {renderButton()}
             </div>
