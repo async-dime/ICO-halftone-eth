@@ -1,6 +1,8 @@
 import Head from 'next/head';
 import Web3Modal from 'web3modal';
+import Toast from '../components/Toast';
 import styles from '../styles/Home.module.css';
+import ProgressBar from '@badrap/bar-of-progress';
 import { useEffect, useRef, useState } from 'react';
 import { BigNumber, Contract, providers, utils } from 'ethers';
 import {
@@ -9,6 +11,13 @@ import {
   TOKEN_CONTRACT_ABI,
   TOKEN_CONTRACT_ADDRESS,
 } from '../constants';
+
+const BarOfProgress = new ProgressBar({
+  size: 4,
+  color: '#d38312',
+  className: `${styles.progressBar}`,
+  delay: 150,
+});
 
 export default function Home() {
   // create a BigNumber '0'
@@ -30,8 +39,41 @@ export default function Home() {
   // create a reference to the Web3 Modal (for connecting to Metamask) that persists as long as the page is open
   const web3ModalRef = useRef();
 
+  const [list, setList] = useState([]); // list of toasts
+
   const TWITTER_HANDLE = 'p0tat0H8';
   const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
+
+  let toastProperties = null;
+
+  const showToast = (type, text) => {
+    const id = Date.now();
+    const desc = text.toString();
+
+    switch (type) {
+      case 'success':
+        toastProperties = {
+          id,
+          title: 'Success',
+          description: desc,
+          backgroundColor: '#5cb85c',
+          icon: 'checkIcon',
+        };
+        break;
+      case 'error':
+        toastProperties = {
+          id,
+          title: 'Error',
+          description: desc,
+          backgroundColor: '#d9534f',
+          icon: 'errorIcon',
+        };
+        break;
+      default:
+        setList([]);
+    }
+    setList([...list, toastProperties]);
+  };
 
   /**
    * getTokensToBeClaimed: checks the balance of tokens that can be claimed by the user
@@ -133,44 +175,56 @@ export default function Home() {
         // We are parsing `0.001` string to ether using the utils lib from ethers.js
         value: utils.parseEther(value.toString()),
       });
+      BarOfProgress.start(15000);
       setLoading(true);
       await tx.wait();
-      window.alert(`Successfully minted Halftone Eth tokens`);
+      setLoading(false);
+      showToast('success', 'Successfully minted Halftone Ethereum Tokens!');
       await getBalanceOfHalftoneEthTokens();
       await getTotalTokensMinted();
       await getTotalTokensMinted();
     } catch (err) {
       console.error(err);
+      showToast(
+        'error',
+        `Failed to mint Halftone Ethereum Token : ${err.message}`
+      );
     }
   };
 
-   /**
+  /**
    * claimHalftoneEthTokens: Helps the user claim Crypto Dev Tokens
    */
-    const claimHalftoneEthTokens = async () => {
-      try {
-        // We need a Signer here since this is a 'write' transaction.
-        // Create an instance of tokenContract
-        const signer = await getProviderOrSigner(true);
-        // Create an instance of tokenContract
-        const tokenContract = new Contract(
-          TOKEN_CONTRACT_ADDRESS,
-          TOKEN_CONTRACT_ABI,
-          signer
-        );
-        const tx = await tokenContract.claim();
-        setLoading(true);
-        // wait for the transaction to get mined
-        await tx.wait();
-        setLoading(false);
-        window.alert("Successfully claimed Halftone Eth Tokens");
-        await getBalanceOfHalftoneEthTokens();
-        await getTotalTokensMinted();
-        await getTokensToBeClaimed();
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  const claimHalftoneEthTokens = async () => {
+    try {
+      // We need a Signer here since this is a 'write' transaction.
+      // Create an instance of tokenContract
+      const signer = await getProviderOrSigner(true);
+      // Create an instance of tokenContract
+      const tokenContract = new Contract(
+        TOKEN_CONTRACT_ADDRESS,
+        TOKEN_CONTRACT_ABI,
+        signer
+      );
+      const tx = await tokenContract.claim();
+      BarOfProgress.start(15000);
+      setLoading(true);
+      // wait for the transaction to get mined
+      await tx.wait();
+      BarOfProgress.finish();
+      setLoading(false);
+      showToast('success', 'Successfully claimed Halftone Ethereum Tokens!');
+      await getBalanceOfHalftoneEthTokens();
+      await getTotalTokensMinted();
+      await getTokensToBeClaimed();
+    } catch (err) {
+      console.error(err);
+      showToast(
+        'error',
+        `Failed to claim Halftone Ethereum Token : ${err.message}`
+      );
+    }
+  };
 
   /**
    * getTotalTokensMinted: Retrieves the total number of tokens have been minted
@@ -215,7 +269,7 @@ export default function Home() {
       // if the user isn't connected to MetaMask account, we throw an error
       const { chainId } = await web3Provider.getNetwork();
       if (chainId !== 4) {
-        // showToast('error', 'Change the network to Rinkeby');
+        showToast('error', 'Change the network to Rinkeby');
         throw new Error('Please connect to the Rinkeby testnet');
       }
 
@@ -227,6 +281,7 @@ export default function Home() {
       return web3Provider;
     } catch (err) {
       console.error(err);
+      showToast('error', 'Please install MetaMask!');
     }
   };
 
@@ -234,12 +289,58 @@ export default function Home() {
    * connectWallet: Connect to the MetaMask wallet
    */
   const connectWallet = async () => {
+    const { ethereum } = window;
     try {
-      // get the provider from web3modal (metamask)
-      // for the first-time user, it prompts user to connect their wallet
-      await getProviderOrSigner(true);
+      if (ethereum) {
+        // get the provider from web3modal (metamask)
+        // for the first-time user, it prompts user to connect their wallet
+        await getProviderOrSigner();
+      } else {
+        showToast('error', 'Please install MetaMask!');
+        return;
+      }
     } catch (err) {
       console.error(err);
+      showToast('error', err.message);
+    }
+  };
+
+  const checkIfWalletIsConnected = async () => {
+    const { ethereum } = window;
+    try {
+      if (!ethereum) {
+        showToast('error', 'Make sure you have MetaMask!');
+        return;
+      } else {
+        showToast('success', `We have the ethereum object: ${ethereum}`);
+
+        const accounts = await ethereum.request({ method: 'eth_accounts' }); // Check if we're authorized to access the user's wallet
+
+        if (accounts.length !== 0) {
+          const account = accounts[0];
+          showToast('success', `Found a wallet address: ${account}.`);
+
+          // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
+          if (!walletConnected) {
+            // Assign the Web3Modal class to the reference object by setting it's `current` value
+            // The `current` value is persisted throughout as long as this page is open
+            web3ModalRef.current = new Web3Modal({
+              network: 'rinkeby',
+              providerOptions: {},
+              disableInjectedProvider: false,
+            });
+            connectWallet();
+            getTotalTokensMinted();
+            getBalanceOfHalftoneEthTokens();
+            getTokensToBeClaimed();
+          }
+        } else {
+          showToast('error', 'Please connect your MetaMask wallet.');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -249,69 +350,67 @@ export default function Home() {
    * In this case, whenever the value of `walletConnected` changes - this effect will be called
    */
   useEffect(() => {
-    // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
-    if (!walletConnected) {
-      // Assign the Web3Modal class to the reference object by setting it's `current` value
-      // The `current` value is persisted throughout as long as this page is open
-      web3ModalRef.current = new Web3Modal({
-        network: 'rinkeby',
-        providerOptions: {},
-        disableInjectedProvider: false,
-      });
-      connectWallet();
-      getTotalTokensMinted();
-      getBalanceOfHalftoneEthTokens();
-      getTokensToBeClaimed();
-    }
+    checkIfWalletIsConnected();
   }, [walletConnected]);
 
   /*
         renderButton: Returns a button based on the state of the dapp
       */
   const renderButton = () => {
-    // If we are currently waiting for something, return a loading button
-    if (loading) {
-      return (
-        <div>
-          <button className={styles.button}>Loading...</button>
-        </div>
-      );
-    }
-    // If tokens to be claimed are greater than 0, return a claim button
-    if (tokensToBeClaimed > 0) {
-      return (
-        <div>
-          <div className={styles.description}>
-            {tokensToBeClaimed * 10} Tokens can be claimed!
+    if (walletConnected) {
+      // If we are currently waiting for something, return a loading button
+      if (loading) {
+        return (
+          <div>
+            <button className={styles.button}>Loading...</button>
           </div>
-          <button className={styles.button} onClick={claimHalftoneEthTokens}>
-            Claim Tokens 🪙
+        );
+      }
+      // If tokens to be claimed are greater than 0, return a claim button
+      if (tokensToBeClaimed > 0) {
+        return (
+          <div>
+            <div className={styles.description}>
+              <span className={styles.claimableTokens}>
+                <b>{tokensToBeClaimed * 10}</b>
+              </span>{' '}
+              Tokens can be claimed!
+            </div>
+            <button className={styles.button} onClick={claimHalftoneEthTokens}>
+              Claim Tokens 🪙
+            </button>
+          </div>
+        );
+      }
+      // If user doesn't have any tokens to claim, show the mint button
+      return (
+        <div style={{ display: 'flex-col' }}>
+          <div>
+            <input
+              type="number"
+              placeholder="Amount of Tokens"
+              // BigNumber.from converts the `e.target.value` to a BigNumber
+              onChange={(e) => setTokenAmount(BigNumber.from(e.target.value))}
+              className={styles.input}
+            />
+          </div>
+
+          <button
+            className={styles.button}
+            disabled={!(tokenAmount > 0)}
+            onClick={() => mintHalftoneEthToken(tokenAmount)}
+          >
+            Mint Tokens 🪙
           </button>
         </div>
       );
-    }
-    // If user doesn't have any tokens to claim, show the mint button
-    return (
-      <div style={{ display: 'flex-col' }}>
-        <div>
-          <input
-            type="number"
-            placeholder="Amount of Tokens"
-            // BigNumber.from converts the `e.target.value` to a BigNumber
-            onChange={(e) => setTokenAmount(BigNumber.from(e.target.value))}
-            className={styles.input}
-          />
-        </div>
-
-        <button
-          className={styles.button}
-          disabled={!(tokenAmount > 0)}
-          onClick={() => mintHalftoneEthToken(tokenAmount)}
-        >
-          Mint Tokens 🪙
+    } else if (!walletConnected) {
+      return (
+        <button onClick={connectWallet} className={styles.button}>
+          Connect your wallet
         </button>
-      </div>
-    );
+      );
+    }
   };
 
   return (
@@ -322,8 +421,9 @@ export default function Home() {
         <link rel="icon" href="/halftone-ethx50.ico" />
       </Head>
       <div className={styles.main}>
+        <Toast toastList={list} />
         <div>
-          <h1 className={styles.title}>Halftone Ethereum ICO!</h1>
+          <h1 className={styles.header}>Halftone Ethereum ICO</h1>
           <div className={styles.description}>
             This is a page for claiming or minting Halftone Ethereum tokens.
           </div>
@@ -331,13 +431,19 @@ export default function Home() {
             <div>
               <div className={styles.description}>
                 {/* Format Ether helps us in converting a BigNumber to string */}
-                You have minted {utils.formatEther(balanceOfHalftoneEthTokens)}{' '}
+                You have minted{' '}
+                <span className={styles.mintedTokens}>
+                  <b>{utils.formatEther(balanceOfHalftoneEthTokens)}</b>
+                </span>{' '}
                 Halftone Ethereum Tokens
               </div>
               <div className={styles.description}>
                 {/* Format Ether helps us in converting a BigNumber to string */}
-                Overall {utils.formatEther(tokensMinted)}/10000 have been
-                minted!!!
+                Overall{' '}
+                <span className={styles.mintedTokens}>
+                  <b>{utils.formatEther(tokensMinted)}/10000</b>
+                </span>{' '}
+                have been minted!
               </div>
               {renderButton()}
             </div>
